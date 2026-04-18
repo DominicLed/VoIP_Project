@@ -1,8 +1,8 @@
 package server;
 
-import java.io.*;
-import java.net.*;
-import java.util.concurrent.ConcurrentHashMap;
+    import java.io.*;
+    import java.net.*;
+    import java.util.concurrent.ConcurrentHashMap;
 
 public class RegistryServer {
 
@@ -12,10 +12,12 @@ public class RegistryServer {
 
     public static void main(String[] args) throws IOException {
 
+        /* Binds to and listens on all local network interfaces -> 0.0.0.0 */
         ServerSocket serverSocket = new ServerSocket(PORT, 50, InetAddress.getByName("0.0.0.0"));
         System.out.println("🌐 Registry Server running...");
 
         while (true) {
+            /* Blocks on accept */
             Socket socket = serverSocket.accept();
             new Thread(() -> handleClient(socket)).start();
         }
@@ -31,15 +33,18 @@ public class RegistryServer {
             String[] parts = line.split(" ");
 
             switch (parts[0]) {
+                /* Adding user to the concurrent hash map */
                 case "REGISTER":
                     users.put(parts[1], parts[2] + ":" + parts[3]);
                     out.println("OK");
                     break; 
                 case "LIST":
+                    /* Return a list of all online users */
                     out.println(String.join(",", users.keySet()));
                     break;
 
                 case "LOOKUP":
+                    /* Lookup a specific user to see if they are online */
                     out.println(users.getOrDefault(parts[1], "NOT_FOUND"));
                     break;
             }

@@ -139,7 +139,6 @@ public class CallManager {
                 PrintWriter callOut = new PrintWriter(call.getOutputStream(), true);
                 BufferedReader callIn = new BufferedReader(new InputStreamReader(call.getInputStream()))
             ) {
-                System.out.println("========== Trying to call: " + username + " ==========");
                 callOut.println("CALL");
 
                 String reply = callIn.readLine();
