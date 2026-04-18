@@ -2,6 +2,7 @@ package client;
 
 import java.io.*;
 import java.net.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class CallManager {
 
@@ -9,6 +10,7 @@ public class CallManager {
     private static final int AUDIO_PORT = 6000;
 
     private static final Object CALL_LOCK = new Object();
+    private static final AtomicLong LAST_RX_NANOS = new AtomicLong(0L);
 
     private static Socket pendingCallSocket = null;
     private static boolean audioStarted = false;
@@ -166,7 +168,7 @@ public class CallManager {
         DatagramSocket socket = new DatagramSocket(AUDIO_PORT);
         System.out.println("Audio started on UDP " + AUDIO_PORT + " with peer " + peer.getHostAddress());
 
-        new Thread(new AudioSender(socket, peer)).start();
-        new Thread(new AudioReceiver(socket)).start();
+        new Thread(new AudioSender(socket, peer, LAST_RX_NANOS)).start();
+        new Thread(new AudioReceiver(socket, LAST_RX_NANOS)).start();
     }
 }
