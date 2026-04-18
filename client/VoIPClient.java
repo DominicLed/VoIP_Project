@@ -60,7 +60,7 @@ public class VoIPClient {
     }
 
     private static void register(String serverIp) throws Exception {
-        System.out.println("========== Inside register function: ==========");
+      
         try (
             Socket socket = new Socket(serverIp, SERVER_PORT);
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
@@ -70,7 +70,6 @@ public class VoIPClient {
             out.println("REGISTER " + username + " " + clientIP + " " + CALL_SIGNAL_PORT);
 
             String ack = in.readLine();
-            System.out.println("========== " + username + " registered: " + ack + " ==========");
         }
     }
 
