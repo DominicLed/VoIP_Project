@@ -1,0 +1,11 @@
+# Java
+*.class
+
+# build output
+out/
+
+# OS files
+.DS_Store
+
+# logs
+*.log
