@@ -52,10 +52,10 @@ public class AudioSender implements Runnable {
                 if (bytesRead <= 0) continue;
 
                 /* Echo feedback supression gate */
-                boolean recentPlayback = (System.nanoTime() - most_recent_received_nanos.get()) < 120_000_000L;
-                if (recentPlayback) {
-                    continue;
-                }
+                // boolean recentPlayback = (System.nanoTime() - most_recent_received_nanos.get()) < 120_000_000L;
+                // if (recentPlayback) {
+                //     continue;
+                // }
 
                 applyAgc(audio_frame, 0, bytesRead, 9000);
 
