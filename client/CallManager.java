@@ -10,8 +10,26 @@ public class CallManager {
     private static final int AUDIO_PORT = 6000;
 
     private static final Object CALL_LOCK = new Object();
-    private static final AtomicLong LAST_RX_NANOS = new AtomicLong(0L);
-
+    /* tracks the timestamp (in nanoseconds) when the last audio packet was received, shared between AudioSender and AudioReceiver threads. */
+    /* AtomicLong is used because multiple threads access and modify this variable concurrently without explicit synchronization. */
+    private static final AtomicLong MOST_RECENT_RECEIVED_NANOS = new AtomicLong(0L);
+    
+    /* Store the TCP connection from a incomming call while waiting for the user to accept or decline.
+    1) WHEN CALL ARRIVES IN -> handleIncoming():
+        - Store the caller socket: pendingCallSocket = socket;
+        
+    2) IF USER TYPES ACCEPT IN -> acceptPendingCall():
+        - Retriee the socket: socketToAccept = pendingCallSocket;
+        - Send ACCEPT response back through that socket to the caller
+        - Get caller's IP from the socket to start audio.
+    
+    3) IF A USER TYPES DECLINE IN -> declinePendingCall():
+        - Retrieve the socket: socketToDecline = pendingCallSocket;
+        - Send DECLINE response back through that socket
+    
+    4) GAURD AGAINST DOUBLE CALLS:
+        - Check if (pendingCallSocket != null) to reject incoming calls if one is already waiting.
+    */
     private static Socket pendingCallSocket = null;
     private static boolean audioStarted = false;
 
@@ -19,6 +37,7 @@ public class CallManager {
         try (ServerSocket server = new ServerSocket(port)) {
             System.out.println("Listening for calls on TCP " + port);
             while (true) {
+                /* Blocks on accpet */
                 Socket socket = server.accept();
                 new Thread(() -> handleIncoming(socket)).start();
             }
@@ -37,6 +56,8 @@ public class CallManager {
                 return;
             }
 
+            /* Allow only one pending incomming call; reject additional simultaneous calls */
+            /* If a call is aready waiting for user response, decline this new call */
             synchronized (CALL_LOCK) {
                 if (pendingCallSocket != null) {
                     PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
@@ -167,7 +188,7 @@ public class CallManager {
         DatagramSocket socket = new DatagramSocket(AUDIO_PORT);
         System.out.println("Audio started on UDP " + AUDIO_PORT + " with peer " + peer.getHostAddress());
 
-        new Thread(new AudioSender(socket, peer, LAST_RX_NANOS)).start();
-        new Thread(new AudioReceiver(socket, LAST_RX_NANOS)).start();
+        new Thread(new AudioSender(socket, peer, MOST_RECENT_RECEIVED_NANOS)).start();
+        new Thread(new AudioReceiver(socket, MOST_RECENT_RECEIVED_NANOS)).start();
     }
 }

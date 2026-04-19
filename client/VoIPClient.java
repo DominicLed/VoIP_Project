@@ -23,7 +23,7 @@ public class VoIPClient {
         username = scanner.nextLine().trim();
 
         register(serverIp);
-
+        /* Asigns a new thread to block on accept inside listenForCalls */
         new Thread(() -> CallManager.listenForCalls(CALL_SIGNAL_PORT)).start();
 
         printHelp();
@@ -34,12 +34,14 @@ public class VoIPClient {
             if (cmd.equals("list")) {
                 listUsers(serverIp);
             } else if (cmd.startsWith("call ")) {
+                /* Splits input by whitespaces '\\s+' -> one or more whitespaces/tabs */
                 String[] parts = cmd.split("\\s+", 2);
                 if (parts.length < 2 || parts[1].isBlank()) {
                     System.out.println("Usage: call <username>");
                     continue;
                 }
 
+                /* Prevents a client from calling himself */
                 String target = parts[1].trim();
                 if (target.equals(username)) {
                     System.out.println("You cannot call yourself.");
@@ -47,6 +49,7 @@ public class VoIPClient {
                 }
 
                 CallManager.callUser(target, serverIp);
+                
             } else if (cmd.equals("accept")) {
                 CallManager.acceptPendingCall();
             } else if (cmd.equals("decline")) {
@@ -73,6 +76,7 @@ public class VoIPClient {
         }
     }
 
+    /* Prints the list of online users */
     private static void listUsers(String serverIp) throws Exception {
         try (
             Socket socket = new Socket(serverIp, SERVER_PORT);
@@ -84,6 +88,7 @@ public class VoIPClient {
         }
     }
 
+    /* Prints the possible actions which a clinet can execute */
     private static void printHelp() {
         System.out.println("Commands:");
         System.out.println("  list");
